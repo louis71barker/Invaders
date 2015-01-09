@@ -5,7 +5,6 @@
 #include "Invader.h"
 #include "player.h"
 #include <stdbool.h>
-#include <time.h>
 #include <SDL_ttf.h>
 
 
@@ -19,33 +18,415 @@
 //player coor
 #define pwidth 400
 #define pheight 550
+//here is the definations for the bools that will be used through out the code
 #define false 0
 #define true 1
+//this is the limit that will be used to change how long each frame of the invader is on the screen for.
 #define ANIMATIONTIMERLIMIT  50
 
 
 
 
+/*This function is used to initalize the invaders onto the screen
+ * it sets the positions aswell as assigning them all the attributes that are need throughout the game
+ */
+void initializeInvaders(Invader invaders[ROWS][COLS])
+{
+  SDL_Rect pos;
+  //sets the width of the invaders box in the grid
+  pos.w=SPRITEWIDTH;
+  //sets the height of the invaders box in the grid
+  pos.h=SPRITEHEIGHT;
+  //this is the gad between all of the invaders
+  int ypos=GAP;
+  //Loops through all of the rows in the invader grid
+  for(int r=0; r<ROWS; ++r)
+  {
+    int xpos=GAP;
+    //this loops through all of the coloums withing the invaders grid.
+    for(int c=0; c<COLS; ++c)
+    {
+      pos.x=xpos+SPRITEWIDTH;
+      pos.y=ypos+SPRITEHEIGHT;
+      xpos+=(GAP+SPRITEWIDTH);
+      invaders[r][c].pos=pos;
+      //this turns the invaders on so they are able to be rendered onto the screen and turned off then they are hit.
+      invaders[r][c].active=1;
+      //this is used to flicker between the two different frames of the invaders.
+      invaders[r][c].frame=1;
+      //this is used to show the explosion of the invaders when they are hit but the defenders bullet.
+      invaders[r][c].boom=false;
+      //this is used to set the different invaders to their different rows show it is possible to show the three different types of invaders.
+      if(r==0)
+          //this is for the top row
+        invaders[r][c].type=TYPE1;
+      else if(r==1 || r==2)
+          //this is for the second and third row down.
+        invaders[r][c].type=TYPE2;
+      else
+          //this is for the bottom two rows.
+        invaders[r][c].type=TYPE3;
 
-void initializeInvaders(Invader invaders[ROWS][COLS]);
+    }
+    ypos+=(GAP+SPRITEHEIGHT);
+  }
+}
 
-void updateInvaders(Invader invaders[ROWS][COLS]);
+/*
+ *This function is used for the renderind of the invaders on the screen
+ *The three different levels of the Invader are defined here defining the co-ordinates on the sprite sheet
+ *The width, height, x and y cordinates on the spirte sheet are defined here so only the required area of the sprite sheet is shown
+ *In this function, it is were the animation of the sprites is done by changing the x pos of the invader sprite location.
+ */
+///
+/// \brief drawInvaders - This function is used for the renderind of the invaders on the screen
+/// \param ren - This is what is used to store all of the data that needs to be rendered on the screen
+/// \param tex - This is what is used to bring through the image that is imported so it can be accessed, used and rendered withing the game
+/// \param invaders - This is the structure for the invaders which contains all the variables need for the invaders.
+///
+void drawInvaders(SDL_Renderer *ren, SDL_Texture *tex, Invader invaders[ROWS][COLS])
+{
 
-void drawInvaders(SDL_Renderer *ren,SDL_Texture *tex,Invader invaders[ROWS][COLS]);
+  static int animationframe = 0;
+  static int rowCount = 0;
 
-void drawship(SDL_Renderer *ren, SDL_Texture *tex, SDL_Rect ship);
+  SDL_Rect SrcR1;
+  SrcR1.x=300;
+  SrcR1.y=13;
+  SrcR1.w=95;
+  SrcR1.h=83;
 
-void bulletTrigger(SDL_Renderer *ren, SDL_Texture *tex, SDL_Rect *bullet, SDL_Rect *ship);
+  SDL_Rect SrcR2;
+  SrcR2.x=18;
+  SrcR2.y=13;
+  SrcR2.w=120;
+  SrcR2.h=83;
 
-void bulletCollision(Invader invaders[ROWS][COLS],SDL_Rect *bullet);
+  SDL_Rect SrcR3;
+  SrcR3.x=18;
+  SrcR3.y=130;
+  SrcR3.w=125;
+  SrcR3.h=83;
 
-void bulletFire(SDL_Rect *bullet);
 
-void updateShip (SDL_Rect *ship);
+  animationframe++;
 
-void explosion(SDL_Renderer *ren, SDL_Texture *tex, SDL_Rect explosions, Invader invaders[ROWS][COLS]);
 
-void Levels();
+  for(int r=0; r<ROWS; ++r)
+  {
+    for(int c=0; c<COLS; ++c)
+    {
+        if(animationframe == ANIMATIONTIMERLIMIT)
+        {
+          invaders[r][c].frame = (invaders[r][c].frame == 1 ? 2 : 1);
+          rowCount++;
+          if (rowCount == 55)
+          {
+              animationframe = 0;
+              rowCount       = 0;
+          }
+        }
+        if (invaders[r][c].frame == 1)
+        {
+            SrcR1.x = 420;
+            SrcR2.x = 158;
+            SrcR3.x = 158;
+        }
+        else
+        {
+            SrcR1.x = 300;
+            SrcR2.x = 18;
+            SrcR3.x = 18;
+        }
+      if (invaders[r][c].active == 1)
+      {
+
+          switch(invaders[r][c].type)
+          {
+              case TYPE1 : SDL_RenderCopy(ren, tex,&SrcR1,&invaders[r][c].pos);break;
+              case TYPE2 : SDL_RenderCopy(ren, tex,&SrcR2,&invaders[r][c].pos);break;
+              case TYPE3 : SDL_RenderCopy(ren, tex,&SrcR3,&invaders[r][c].pos);break;
+      }
+
+      }
+    }
+  }
+}
+/*
+ *
+ */
+///
+/// \brief explosion
+/// \param ren
+/// \param tex
+/// \param explosions
+/// \param invaders
+///
+void explosion(SDL_Renderer *ren, SDL_Texture *tex, SDL_Rect explosions, Invader invaders[ROWS][COLS])
+{
+    static int frameTimer = 0;
+
+    SDL_Rect Explim1;
+    Explim1.x=345;
+    Explim1.y=610;
+    Explim1.w=125;
+    Explim1.h=83;
+
+
+    for(int r=0; r<ROWS; ++r)
+    {
+      for(int c=0; c<COLS; ++c)
+      {
+        if (invaders[r][c].boom == true)
+        {
+          explosions.x=invaders[r][c].pos.x;
+          explosions.y=invaders[r][c].pos.y;
+          SDL_RenderCopy(ren, tex, &Explim1, &explosions);
+          frameTimer++;
+          printf("%d \n", frameTimer);
+          if (frameTimer == 10)
+          {
+              frameTimer = 0;
+              invaders[r][c].boom = false;
+          }
+        }
+      }
+    }
+
+    //SDL_RenderCopy(ren, tex, &Explim1, &explosions);
+}
+
+/*
+ * This Function is used to render the ship onto the screen using the coordinates given.
+ */
+///
+/// \brief drawship
+/// \param ren
+/// \param tex
+/// \param ship
+///
+void drawship(SDL_Renderer *ren, SDL_Texture *tex, SDL_Rect ship)
+{
+    SDL_Rect shipim;
+    shipim.x=150;
+    shipim.y=635;
+    shipim.w=74;
+    shipim.h=56;
+
+
+    SDL_RenderFillRect(ren,&ship);
+    SDL_RenderCopy(ren, tex, &shipim, &ship);
+}
+
+
+static char bulletFired = false;
+static char flag = false;
+
+
+
+///
+/// \brief bulletTrigger
+/// \param ren
+/// \param tex
+/// \param bullet
+/// \param ship
+///
+void bulletTrigger(SDL_Renderer *ren, SDL_Texture *tex,SDL_Rect *bullet, SDL_Rect *ship)
+{
+    const Uint8 *keystate = SDL_GetKeyboardState(NULL);
+
+    SDL_Rect bulletim;
+    bulletim.x = 485;
+    bulletim.y = 395;
+    bulletim.w = 30;
+    bulletim.h = 60;
+
+    if (keystate[SDL_SCANCODE_SPACE] && bulletFired == false)
+    {
+        bulletFired = true;
+        bullet->x = ship->x + 16;
+    }
+    if (bulletFired == true)
+    {
+        if (flag == false)
+        {
+            flag = true;
+            printf("ship pos set");
+        }
+        SDL_RenderCopy(ren,tex,&bulletim,bullet);
+    }
+}
+
+
+///
+/// \brief bulletFire
+/// \param bullet
+///
+void bulletFire(SDL_Rect *bullet)
+{
+    if (bulletFired == true)
+        bullet->y -=20;
+    if (bullet->y <= 0)
+    {
+        bulletFired = false;
+        bullet->y = HEIGHT-40;
+        flag = false;
+    }
+}
+
+
+
+
+
+ /* This is used to move the player left and right accross the screen
+ */
+///
+/// \brief updateShip
+/// \param ship
+///
+void updateShip (SDL_Rect *ship)
+{
+    const Uint8 *keystate = SDL_GetKeyboardState(NULL);
+
+    //for (int i = )
+    char moveRight = false;
+    char moveLeft = false;
+
+    if (keystate[SDL_SCANCODE_LEFT])
+    {
+        moveLeft = true;
+        if (ship->x <=10)
+        {
+            moveLeft = false;
+        }
+
+    }
+    if (keystate[SDL_SCANCODE_RIGHT])
+    {
+        moveRight = true;
+
+        if (ship->x >= 750)
+        {
+            moveRight=false;
+        }
+
+    }
+    if (moveRight == true)
+    {
+        ship->x += 6;
+    }
+    else if (moveLeft == true)
+    {
+        ship->x -= 6;
+    }
+}
+
+
+///
+/// \brief bulletCollision
+/// \param invaders
+/// \param bullet
+///
+void bulletCollision(Invader invaders[ROWS][COLS],SDL_Rect *bullet)
+{
+    for(int r=0; r<5+2; r++)
+    {
+      for(int c=0; c<11+2; c++)
+      {
+
+                if(SDL_HasIntersection(&invaders[r][c].pos, bullet))
+                {
+                    if (invaders[r][c].active == 1)
+                    {
+                        printf("collision\n");
+                        invaders[r][c].active=0;
+                        invaders[r][c].boom = true;
+                        bulletFired = false;
+                        bullet->y = HEIGHT-40;
+                        flag = false;
+                    }
+                }
+      }
+    }
+}
+
+
+void updateInvaders(Invader invaders[ROWS][COLS])
+{
+  enum DIR{FWD,BWD};
+  static int DIRECTION=FWD;
+  int yinc=0;
+  static int s = 0;
+  static int b = 10;
+  static int i = 0;
+  static int z = 0;
+
+  if (!invaders[i][s].active)
+  {
+      i++;
+      if (i == 5)
+      {
+          invaders[0][0].pos.x+=SPRITEWIDTH+GAP;
+          s += 1;
+          printf("gap trigger\n");
+          i = 0;
+      }
+      if (s >= COLS)
+          {
+
+              s = 0;
+          }
+  }
+  if (!invaders[z][b ].active)
+   {
+      z++;
+      if (z == 5)
+          {
+              invaders[0][10].pos.x-=SPRITEWIDTH+GAP;
+              b--;
+              printf("gap trigger\n");
+              z = 0;
+          }
+      if (b <= 0)
+      {
+
+          b = 10;
+
+      }
+
+  }
+  if(invaders[0][COLS-1].pos.x>=(WIDTH-2*SPRITEWIDTH))
+  {
+
+    DIRECTION=BWD;
+    yinc=GAP;
+
+  }
+  else if(invaders[0][0].pos.x<=SPRITEWIDTH)
+  {
+    DIRECTION=FWD;
+    yinc=GAP;
+
+  }
+
+  for(int r=0; r<ROWS; ++r)
+  {
+    for(int c=0; c<COLS; ++c)
+    {
+      if(DIRECTION==FWD)
+      {
+
+        invaders[r][c].pos.x+=2;
+      }
+      else
+      invaders[r][c].pos.x-=2;
+      invaders[r][c].pos.y+=yinc;
+
+    }
+
+  }
+}
+
 
 
 //void moveShip(SDL_GetKeyboardState(NULL),drawship(shipim.x, shipim.y));
@@ -177,7 +558,6 @@ int main()
   drawship(ren,tex,ship);
   bulletFire(&bullet);
   updateShip(&ship);
-  Levels();
   explosion(ren,tex,explosions,invaders);
   // Up until now everything was drawn behind the scenes.
   // This will show the new, red contents of the window.
@@ -196,475 +576,5 @@ int main()
 //{
 
 //}
-
-
-void initializeInvaders(Invader invaders[ROWS][COLS])
-{
-  SDL_Rect pos;
-  pos.w=SPRITEWIDTH;
-  pos.h=SPRITEHEIGHT;
-  int ypos=GAP;
-
-  for(int r=0; r<ROWS; ++r)
-  {
-    int xpos=GAP;
-    for(int c=0; c<COLS; ++c)
-    {
-      pos.x=xpos+SPRITEWIDTH;
-      pos.y=ypos+SPRITEHEIGHT;
-      xpos+=(GAP+SPRITEWIDTH);
-      invaders[r][c].pos=pos;
-      invaders[r][c].active=1;
-      invaders[r][c].frame=1;
-      invaders[r][c].boom=false;
-      if(r==0)
-        invaders[r][c].type=TYPE1;
-      else if(r==1 || r==2)
-        invaders[r][c].type=TYPE2;
-      else
-        invaders[r][c].type=TYPE3;
-
-    }
-    ypos+=(GAP+SPRITEHEIGHT);
-  }
-}
-
-/*
- *This function is used for the renderind of the invaders on the screen
- *The code commented out shows the different colours for the different types of invaders
- */
-void drawInvaders(SDL_Renderer *ren, SDL_Texture *tex, Invader invaders[ROWS][COLS])
-{
-
-  static int animationframe = 0;
-  static int rowCount = 0;
-
-  //frame 1
-  SDL_Rect SrcR1;
-  SrcR1.x=300;
-  SrcR1.y=13;
-  SrcR1.w=112;
-  SrcR1.h=83;
-
-  SDL_Rect SrcR2;
-  SrcR2.x=18;
-  SrcR2.y=13;
-  SrcR2.w=112;
-  SrcR2.h=83;
-
-  SDL_Rect SrcR3;
-  SrcR3.x=18;
-  SrcR3.y=130;
-  SrcR3.w=125;
-  SrcR3.h=83;
-
-//  if (animationframe == ANIMATIONTIMERLIMIT )
-//  {
-//      invaders[r][c].frame = 1
-//  }
-  animationframe++;
-
-
-  for(int r=0; r<ROWS; ++r)
-  {
-    for(int c=0; c<COLS; ++c)
-    {
-        if(animationframe == ANIMATIONTIMERLIMIT)
-        {
-          invaders[r][c].frame = (invaders[r][c].frame == 1 ? 2 : 1);
-          rowCount++;
-          printf("SDAAAGE %d\n", invaders[r][c].frame);
-          if (rowCount == 55)
-          {
-              animationframe = 0;
-              rowCount       = 0;
-          }
-        }
-        if (invaders[r][c].frame == 1)
-        {
-            SrcR1.x = 420;
-            SrcR2.x = 158;
-            SrcR3.x = 158;
-        }
-        else
-        {
-            SrcR1.x = 300;
-            SrcR2.x = 18;
-            SrcR3.x = 18;
-        }
-      if (invaders[r][c].active == 1)
-      {
-
-          switch(invaders[r][c].type)
-          {
-              case TYPE1 : SDL_RenderCopy(ren, tex,&SrcR1,&invaders[r][c].pos);break;
-              case TYPE2 : SDL_RenderCopy(ren, tex,&SrcR2,&invaders[r][c].pos);break;
-              case TYPE3 : SDL_RenderCopy(ren, tex,&SrcR3,&invaders[r][c].pos);break;
-      }
-
-      }
-
-      //SDL_RenderFillRect(ren,&invaders[r][c].pos);
-      //SDL_RenderCopy(ren, tex,&SrcR1,&invaders[r][c].pos);
-      //SDL_RenderCopy(ren, tex,&SrcR2,&invaders[r][c].pos);
-      //SDL_RenderCopy(ren, tex,&SrcR3,&invaders[r][c].pos);
-
-
-
-    }
-  }
-}
-/*
- * This Function is used to render the ship onto the screen using the coordinates given.
- */
-
-//this is the function that will be used to print text onto the screen. it will contain the cordinates of were the text will be shown
-void textLoader()
-{
-//    TTF_Font *text_font =  TTF_OpenFont("/usr/share/fonts/truetype/freefont/FreeMonoBold.ttf", 36);
-
-//      if (text_font == NULL) {
-//        printf("Could not load font\n");
-//        exit(1);
-//      }
-}
-
-void explosion(SDL_Renderer *ren, SDL_Texture *tex, SDL_Rect explosions, Invader invaders[ROWS][COLS])
-{
-    static int frameTimer = 10;
-
-    SDL_Rect Explim1;
-    Explim1.x=345;
-    Explim1.y=610;
-    Explim1.w=125;
-    Explim1.h=83;
-
-
-    for(int r=0; r<ROWS; ++r)
-    {
-      for(int c=0; c<COLS; ++c)
-      {
-        if (invaders[r][c].boom == true)
-        {
-          Explim1.x=invaders[r][c].pos.x;
-          Explim1.y=invaders[r][c].pos.y;
-          SDL_RenderCopy(ren, tex, &Explim1, &explosions);
-          frameTimer++;
-          if (frameTimer == 10)
-          {
-              frameTimer = 0;
-              invaders[r][c].boom = false;
-          }
-        }
-      }
-    }
-
-    //SDL_RenderCopy(ren, tex, &Explim1, &explosions);
-}
-
-void drawship(SDL_Renderer *ren, SDL_Texture *tex, SDL_Rect ship)
-{
-    SDL_Rect shipim;
-    shipim.x=150;
-    shipim.y=635;
-    shipim.w=74;
-    shipim.h=56;
-
-
-    SDL_RenderFillRect(ren,&ship);
-    SDL_RenderCopy(ren, tex, &shipim, &ship);
-}
-
-
-static char bulletFired = false;
-static char flag = false;
-
-
-
-
-void bulletTrigger(SDL_Renderer *ren, SDL_Texture *tex,SDL_Rect *bullet, SDL_Rect *ship)
-{
-    const Uint8 *keystate = SDL_GetKeyboardState(NULL);
-
-    SDL_Rect bulletim;
-    bulletim.x = 485;
-    bulletim.y = 395;
-    bulletim.w = 30;
-    bulletim.h = 60;
-
-    if (keystate[SDL_SCANCODE_SPACE] && bulletFired == false)
-    {
-        bulletFired = true;
-        bullet->x = ship->x + 16;
-    }
-    if (bulletFired == true)
-    {
-        if (flag == false)
-        {
-
-
-            flag = true;
-            printf("ship pos set");
-        }
-
-        //SDL_RenderFillRect(ren,bullet);
-        SDL_RenderCopy(ren,tex,&bulletim,bullet);
-
-
-    }
-
-}
-
-
-
-void bulletFire(SDL_Rect *bullet)
-{
-    if (bulletFired == true)
-        bullet->y -=20;
-    if (bullet->y <= 0)
-    {
-        bulletFired = false;
-        bullet->y = HEIGHT-40;
-        flag = false;
-
-    }
-//    if (bulletFired == false)
-//        bullet->y = HEIGHT-40;
-
-}
-
-
-
-
-
- /* This is used to move the player left and right accross the screen
- */
-
-void updateShip (SDL_Rect *ship)
-{
-    const Uint8 *keystate = SDL_GetKeyboardState(NULL);
-
-    //for (int i = )
-    char moveRight = false;
-    char moveLeft = false;
-
-    if (keystate[SDL_SCANCODE_LEFT])
-    {
-        moveLeft = true;
-        if (ship->x <=10)
-        {
-            moveLeft = false;
-        }
-
-    }
-    if (keystate[SDL_SCANCODE_RIGHT])
-    {
-        moveRight = true;
-
-        if (ship->x >= 750)
-        {
-            moveRight=false;
-        }
-
-    }
-    if (moveRight == true)
-    {
-        //printf("Right Pressed. \n");
-        ship->x += 6;
-    }
-    else if (moveLeft == true)
-    {
-        //printf("Left Pressed. \n");
-        ship->x -= 6;
-    }
-}
-
-void bulletCollision(Invader invaders[ROWS][COLS],SDL_Rect *bullet)
-{
-//    static int collision = false;
-//    if(invaders[0][COLS].pos.x>=bullet->x)
-//    {
-//      printf("collide");
-//      invaders[r][c].active=0;
-
-//    }
-    for(int r=0; r<5+2; r++)
-    {
-      for(int c=0; c<11+2; c++)
-      {
-//          float bw = 10, bh = 20;
-//          float bx = bullet->x, by = bullet->y;
-//          float ix = invaders[r][c].pos.x, iy = invaders[r][c].pos.y, iw = invaders[r][c].pos.w, ih = invaders[r][c].pos.h;
-//          int ileft = invaders[r][c].pos.x;
-//          int iright = invaders[r][c].pos.x + invaders[r][c].pos.w;
-//          int ibottom = invaders[r][c].pos.y + invaders[r][c].pos.h;
-
-//          int bleft = bullet->x;
-//          int bright = bullet->x + bullet->w;
-//          int btop = bullet->y;
-//           Check edges
-//          if (ileft > bright )// Left 1 is right of right 2
-//              return false; // No collision
-
-//          if ( iright < bleft ) // Right 1 is left of left 2
-//              return false; // No collision
-
-//          if ( ibottom < btop ) // Bottom 1 is above top 2
-//              return false; // No collision
-
-//          else
-//          {
-//              printf("collision");
-//                            invaders[r][c].active=0;
-//                            bulletFired = false;
-//                            bullet->y = HEIGHT-40;
-//                            flag = false;
-//          }
-
-// best so far
-//            if (bulletFired == true)
-//            {
-                //if (shipPos > invaders[r][c].pos.x && shipPos < (invaders[r][c].pos.x+invaders[r][c].pos.w) && bullet->y > invaders[r][c].pos.y && bullet->y < (invaders[r][c].pos.y+invaders[r][c].pos.h))
-                if(SDL_HasIntersection(&invaders[r][c].pos, bullet))
-                {
-                    if (invaders[r][c].active == 1)
-                    {
-                        printf("collision\n");
-                        invaders[r][c].active=0;
-                        invaders[r][c].boom = true;
-                        bulletFired = false;
-                        bullet->y = HEIGHT-40;
-                        flag = false;
-                    }
-                }
-//            }
-//            if(invaders[r][c].pos.y>=bullet->y && invaders[r][c].pos.x>=bullet->x && invaders[r][c].active==1)
-//            {
-
-
-//                    printf("collision\n");
-//                    invaders[r][c].active=0;
-//                    bulletFired = false;
-//                    bullet->y = HEIGHT-40;
-//                    flag = false;
-
-
-
-//            }
-//            else
-//            {
-//                c++;
-//            }
-
-
-
-
-
-
-//          if (ix > bx && ix < bx+bw && iy > by && iy < by+bh)
-//          {
-//              printf("collision");
-//              invaders[r][c].active=0;
-//              bulletFired = false;
-//              bullet->y = HEIGHT-40;
-//              flag = false;
-//          }
-
-      }
-//      r++;
-    }
-
-
-}
-
-static bool Winner = false;
-
-void updateInvaders(Invader invaders[ROWS][COLS])
-{
-  enum DIR{FWD,BWD};
-  static int DIRECTION=FWD;
-//  int row [6]= {0,1,2,3,4,5};
-  int yinc=0;
-  static int s = 0;
-  static int b = 10;
-  static int i = 0;
-  static int z = 0;
-
-  if (!invaders[i][s].active && Winner == false)
-  {
-      i++;
-      if (i == 5)
-      {
-          invaders[0][0].pos.x+=SPRITEWIDTH+GAP;
-          s += 1;
-          printf("gap trigger\n");
-          i = 0;
-      }
-      if (s >= COLS && Winner == false)
-          {
-              Winner = true;
-              s = 0;
-          }
-  }
-  if (!invaders[z][b ].active && Winner == false)
-   {
-      z++;
-      if (z == 5)
-          {
-              invaders[0][10].pos.x-=SPRITEWIDTH+GAP;
-              b--;
-              printf("gap trigger\n");
-              z = 0;
-          }
-      if (b <= 0 && Winner == false)
-      {
-          Winner = true;
-          b = 10;
-
-      }
-
-  }
-  if(invaders[0][COLS-1].pos.x>=(WIDTH-2*SPRITEWIDTH))
-  {
-
-    DIRECTION=BWD;
-    yinc=GAP;
-
-  }
-  else if(invaders[0][0].pos.x<=SPRITEWIDTH)
-  {
-    DIRECTION=FWD;
-    yinc=GAP;
-
-  }
-
-  for(int r=0; r<ROWS; ++r)
-  {
-    for(int c=0; c<COLS; ++c)
-    {
-      if(DIRECTION==FWD)
-      {
-
-        invaders[r][c].pos.x+=2;
-      }
-      else
-      invaders[r][c].pos.x-=2;
-      invaders[r][c].pos.y+=yinc;
-
-    }
-
-  }
-}
-
-void Levels()
-{
- static int flag2 = 0;
- if (Winner == true && flag2 ==0)
- {
-     printf("Winner");
-     flag2 = 1;
- }
-
-}
 
 
