@@ -86,46 +86,55 @@ void initializeInvaders(Invader invaders[ROWS][COLS])
 ///
 void drawInvaders(SDL_Renderer *ren, SDL_Texture *tex, Invader invaders[ROWS][COLS])
 {
-
+  //this is the variable used to count the amount of frames have run between the transitions of the sprite animation
   static int animationframe = 0;
+  //this variable is used so that all of the invaders are scanned through to allow for the animation to work correctly on the invaders
   static int rowCount = 0;
-
+  //here is the location of the first invader image off of the sprite sheet
   SDL_Rect SrcR1;
   SrcR1.x=300;
   SrcR1.y=13;
   SrcR1.w=95;
   SrcR1.h=83;
-
+  //here is the location of the second invader image off of the sprite sheet
   SDL_Rect SrcR2;
   SrcR2.x=18;
   SrcR2.y=13;
   SrcR2.w=120;
   SrcR2.h=83;
-
+  //here is the location of the third invader image off of the sprite sheet
   SDL_Rect SrcR3;
   SrcR3.x=18;
   SrcR3.y=130;
   SrcR3.w=125;
   SrcR3.h=83;
 
-
+  // this is the repitition to at 1 at every frame to allows for the defenders to have a delay between the different sprite images allowing them to animate
   animationframe++;
 
-
+//these for loop are used for the animation of the invaders
   for(int r=0; r<ROWS; ++r)
   {
     for(int c=0; c<COLS; ++c)
     {
+        //this tests to see if the current frame iteration has reached it limit meaning that the next image frame can be loaded
         if(animationframe == ANIMATIONTIMERLIMIT)
         {
+          //here sets the current frame to 1 to allow for the animation to run through two different frames
+          //it tests to see if the invader frame is 1 or 2 and if it is, set the invader frame to 1
           invaders[r][c].frame = (invaders[r][c].frame == 1 ? 2 : 1);
+          //this is the sequencial addition for the row count so all 55 invaders are able to be animated
           rowCount++;
+          //tests to see if all 55 images have been scanned
           if (rowCount == 55)
           {
+              //if all images have been animated and tested then the frame count and the row count are set back to the start so that they can re run through the next frame
               animationframe = 0;
               rowCount       = 0;
           }
         }
+        //This is used to test if the frame is one or two, depending on which frame is active,
+        //the x value for the location on the sprite sheet is changes to show the second or first frame image
         if (invaders[r][c].frame == 1)
         {
             SrcR1.x = 420;
@@ -138,13 +147,18 @@ void drawInvaders(SDL_Renderer *ren, SDL_Texture *tex, Invader invaders[ROWS][CO
             SrcR2.x = 18;
             SrcR3.x = 18;
         }
+      //here it tests to see if the invader is active to see what invaders need to be displayed on the screen
       if (invaders[r][c].active == 1)
       {
 
+          //here it tests to see what invader image needs to be rendered depending the on Type of the invader
           switch(invaders[r][c].type)
           {
+              //this is the top row
               case TYPE1 : SDL_RenderCopy(ren, tex,&SrcR1,&invaders[r][c].pos);break;
+              //this is the second and third row
               case TYPE2 : SDL_RenderCopy(ren, tex,&SrcR2,&invaders[r][c].pos);break;
+              //this is the forth and fifth row
               case TYPE3 : SDL_RenderCopy(ren, tex,&SrcR3,&invaders[r][c].pos);break;
       }
 
@@ -156,9 +170,9 @@ void drawInvaders(SDL_Renderer *ren, SDL_Texture *tex, Invader invaders[ROWS][CO
  *
  */
 ///
-/// \brief explosion
-/// \param ren
-/// \param tex
+/// \brief explosion - This function is used for the explosion of the invader when they collide with the bullet
+/// \param ren  - This is what is used to store all of the data that needs to be rendered on the screen
+/// \param tex - This is what is used to bring through the image that is imported so it can be accessed, used and rendered withing the game
 /// \param explosions
 /// \param invaders
 ///
@@ -201,8 +215,8 @@ void explosion(SDL_Renderer *ren, SDL_Texture *tex, SDL_Rect explosions, Invader
  */
 ///
 /// \brief drawship
-/// \param ren
-/// \param tex
+/// \param ren - This is what is used to store all of the data that needs to be rendered on the screen
+/// \param tex - This is what is used to bring through the image that is imported so it can be accessed, used and rendered withing the game
 /// \param ship
 ///
 void drawship(SDL_Renderer *ren, SDL_Texture *tex, SDL_Rect ship)
@@ -226,8 +240,8 @@ static char flag = false;
 
 ///
 /// \brief bulletTrigger
-/// \param ren
-/// \param tex
+/// \param ren - This is what is used to store all of the data that needs to be rendered on the screen
+/// \param tex - This is what is used to bring through the image that is imported so it can be accessed, used and rendered withing the game
 /// \param bullet
 /// \param ship
 ///
@@ -350,7 +364,10 @@ void bulletCollision(Invader invaders[ROWS][COLS],SDL_Rect *bullet)
     }
 }
 
-
+///
+/// \brief updateInvaders
+/// \param invaders
+///
 void updateInvaders(Invader invaders[ROWS][COLS])
 {
   enum DIR{FWD,BWD};
@@ -366,7 +383,7 @@ void updateInvaders(Invader invaders[ROWS][COLS])
       i++;
       if (i == 5)
       {
-          invaders[0][0].pos.x+=SPRITEWIDTH+GAP;
+          invaders[4][0].pos.x+=SPRITEWIDTH+GAP;
           s += 1;
           printf("gap trigger\n");
           i = 0;
@@ -377,12 +394,12 @@ void updateInvaders(Invader invaders[ROWS][COLS])
               s = 0;
           }
   }
-  if (!invaders[z][b ].active)
+  if (!invaders[z][b].active)
    {
       z++;
       if (z == 5)
           {
-              invaders[0][10].pos.x-=SPRITEWIDTH+GAP;
+              invaders[4][10].pos.x-=SPRITEWIDTH+GAP;
               b--;
               printf("gap trigger\n");
               z = 0;
@@ -395,14 +412,14 @@ void updateInvaders(Invader invaders[ROWS][COLS])
       }
 
   }
-  if(invaders[0][COLS-1].pos.x>=(WIDTH-2*SPRITEWIDTH))
+  if(invaders[4][COLS-1].pos.x>=(WIDTH-2*SPRITEWIDTH))
   {
 
     DIRECTION=BWD;
     yinc=GAP;
 
   }
-  else if(invaders[0][0].pos.x<=SPRITEWIDTH)
+  else if(invaders[4][0].pos.x<=SPRITEWIDTH)
   {
     DIRECTION=FWD;
     yinc=GAP;
@@ -427,15 +444,8 @@ void updateInvaders(Invader invaders[ROWS][COLS])
   }
 }
 
-
-
-//void moveShip(SDL_GetKeyboardState(NULL),drawship(shipim.x, shipim.y));
-
 int main()
 {
-  //used for the keyboard input detection for moving the player
-
-
   Invader invaders[ROWS][COLS];
   initializeInvaders(invaders);
 
