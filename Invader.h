@@ -14,8 +14,10 @@ typedef struct
   SDL_Rect pos;
   int active;
   int frame;
+  int boom;
   enum InvaderType type;
 }Invader;
+
 
 
 #endif

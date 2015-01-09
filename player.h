@@ -3,16 +3,15 @@
 
 enum ShipType{SHIP1,SHIP2};
 
-#define SPRITEWIDTH 30
-#define SPRITEHEIGHT 30
+#define BULLETWIDTH 30
+#define BULLETHEIGHT 30
 
 typedef struct
 {
   SDL_Rect pos;
-  int active;
-  int frame;
-  enum ShipType type;
 }Ship;
+
+
 
 
 #endif
