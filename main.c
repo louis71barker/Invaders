@@ -430,6 +430,7 @@ void updateInvaders(Invader invaders[ROWS][COLS])
               //this set the coloumn count back to 0 so the game is able to restart
               s = 0;
               b = 10;
+              //this restarts the game over again by re initializing the invader
               initializeInvaders(invaders);
 
           }
@@ -455,6 +456,7 @@ void updateInvaders(Invader invaders[ROWS][COLS])
           //this set the coloumn count back to 0 so the game is able to restart
           b = 10;
           s = 0;
+          //this restarts the game over again by re initializing the invader
           initializeInvaders(invaders);
       }
 
