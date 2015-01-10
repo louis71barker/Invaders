@@ -1,6 +1,7 @@
 /*
- * This program was written by Louis Barker and John Macey of the NCCA.
- * This programs is a remake of the Space Invaders game.
+ * CopyRight© 2015 Louis Barker & Jon Macey.
+ * This program was written by Louis Barker and Jon Macey of the NCCA.
+ * This programs is intended to be a remake of the Space Invaders game.
  * This is an assignment for my Principles and Pratice of Programming unit at Bournemouth University.
  */
 
