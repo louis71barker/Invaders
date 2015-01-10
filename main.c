@@ -1,9 +1,4 @@
-/*
- * CopyRight© 2015 Louis Barker & Jon Macey.
- * This program was written by Louis Barker and Jon Macey of the NCCA.
- * This programs is intended to be a remake of the Space Invaders game.
- * This is an assignment for my Principles and Pratice of Programming unit at Bournemouth University.
- */
+
 
 
 
@@ -16,6 +11,13 @@
 #include <stdbool.h>
 #include <SDL_ttf.h>
 
+
+/*
+ * CopyRight© 2015 Louis Barker & Jon Macey.
+ * This program was written by Louis Barker and Jon Macey of the NCCA.
+ * This programs is intended to be a remake of the Space Invaders game.
+ * This is an assignment for my Principles and Pratice of Programming unit at Bournemouth University.
+ */
 
 // include the map for the maze.
 // the width of the screen taking into account the maze and block
@@ -103,6 +105,8 @@ void initializeInvaders(Invader invaders[ROWS][COLS])
 /// \param tex - This is what is used to bring through the image that is imported so it can be accessed, used and rendered withing the game
 /// \param invaders - This is the structure for the invaders which contains all the variables need for the invaders.
 ///
+
+
 void drawInvaders(SDL_Renderer *ren, SDL_Texture *tex, Invader invaders[ROWS][COLS])
 {
   //this is the variable used to count the amount of frames have run between the transitions of the sprite animation
