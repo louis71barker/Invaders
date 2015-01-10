@@ -1,3 +1,11 @@
+/*
+ * This program was written by Louis Barker and John Macey of the NCCA.
+ * This programs is a remake of the Space Invaders game.
+ * This is an assignment for my Principles and Pratice of Programming unit at Bournemouth University.
+ */
+
+
+
 #include <SDL.h>
 #include <SDL_image.h>
 #include <stdio.h>
@@ -45,6 +53,8 @@ void initializeInvaders(Invader invaders[ROWS][COLS])
   pos.h=SPRITEHEIGHT;
   //this is the gad between all of the invaders
   int ypos=GAP;
+
+
   //Loops through all of the rows in the invader grid
   for(int r=0; r<ROWS; ++r)
   {
@@ -62,6 +72,8 @@ void initializeInvaders(Invader invaders[ROWS][COLS])
       invaders[r][c].frame=1;
       //this is used to show the explosion of the invaders when they are hit but the defenders bullet.
       invaders[r][c].boom=false;
+
+
       //this is used to set the different invaders to their different rows show it is possible to show the three different types of invaders.
       if(r==0)
           //this is for the top row
@@ -96,6 +108,8 @@ void drawInvaders(SDL_Renderer *ren, SDL_Texture *tex, Invader invaders[ROWS][CO
   static int animationframe = 0;
   //this variable is used so that all of the invaders are scanned through to allow for the animation to work correctly on the invaders
   static int rowCount = 0;
+
+
   //here is the location of the first invader image off of the sprite sheet
   SDL_Rect SrcR1;
   SrcR1.x=300;
@@ -172,9 +186,7 @@ void drawInvaders(SDL_Renderer *ren, SDL_Texture *tex, Invader invaders[ROWS][CO
     }
   }
 }
-/*
- *
- */
+
 ///
 /// \brief explosion - This function is used for the explosion of the invader when they collide with the bullet
 /// \param ren  - This is what is used to store all of the data that needs to be rendered on the screen
@@ -394,7 +406,7 @@ void bulletCollision(Invader invaders[ROWS][COLS],SDL_Rect *bullet)
  */
 ///
 /// \brief updateInvaders
-/// \param invaders
+/// \param invaders - This is what is used to bring in all the information needed to do with the invaders
 ///
 void updateInvaders(Invader invaders[ROWS][COLS])
 {
