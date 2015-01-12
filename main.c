@@ -14,18 +14,15 @@
 
 /*
  * CopyRight© 2015 Louis Barker & Jon Macey.
- * This program was written by Louis Barker and Jon Macey of the NCCA.
+ * This program was written by Louis Barker from source code by Jon Macey.
  * This programs is intended to be a remake of the Space Invaders game.
  * This is an assignment for my Principles and Pratice of Programming unit at Bournemouth University.
  */
 
-// include the map for the maze.
-// the width of the screen taking into account the maze and block
+// the width of the screen
 #define WIDTH 800
-// the height of the screen taking into account the maze and block
+// the height of the screen
 #define HEIGHT 600
-// an enumeration for direction to move USE more enums!
-//enum DIRECTION{UP,DOWN,LEFT,RIGHT,NONE};
 //player coor
 #define pwidth 400
 #define pheight 550
